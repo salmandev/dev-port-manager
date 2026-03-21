@@ -1,0 +1,10 @@
+{
+  "name": "dev-port-manager",
+  "host": "dev-port-manager.localtest.me",
+  "port": 9003,
+  "url": "http://dev-port-manager.localtest.me:9003",
+  "projectType": "node",
+  "os": "win32",
+  "assignedAt": "2026-03-21T02:21:09.966Z",
+  "basePath": "d:\\Dev\\GitHub\\dev-port-manager"
+}

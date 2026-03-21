@@ -1,0 +1,2 @@
+# This file marks this directory as a project for dev-port-manager
+# It enables auto-discovery when scanning parent directories

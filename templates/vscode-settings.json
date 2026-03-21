@@ -1,0 +1,5 @@
+{
+  "dev.port": 9000,
+  "dev.host": "project.localtest.me",
+  "dev.url": "http://project.localtest.me:9000"
+}

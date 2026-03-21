@@ -1,0 +1,182 @@
+{
+  "name": "dev-port-manager",
+  "version": "1.0.0",
+  "description": "Production-grade Dev Port Manager - CLI, Web Dashboard, and Desktop App for managing 100+ local development projects",
+  "main": "desktop/main.js",
+  "bin": {
+    "dev-port": "./bin/dev-port.js",
+    "dev-port-menu": "./bin/menu.js",
+    "dpm": "./bin/dev-port.js",
+    "dpm-menu": "./bin/menu.js"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "nodemon --exec node bin/dev-port.js -- --help",
+    "server": "node server.js",
+    "test": "node test/test.js",
+    "test:api": "node test/api-test.js",
+    "test:all": "npm test && npm run test:api",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder -mwl",
+    "pack": "electron-builder --dir",
+    "postinstall": "electron-builder install-app-deps",
+    "release": "electron-builder --publish always"
+  },
+  "keywords": [
+    "dev",
+    "port",
+    "manager",
+    "localhost",
+    "development",
+    "docker",
+    "electron",
+    "desktop"
+  ],
+  "author": "Dev Port Manager Team",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "ejs": "^3.1.9",
+    "electron-updater": "^6.1.7",
+    "express": "^4.18.2",
+    "fs-extra": "^11.2.0",
+    "inquirer": "^9.2.12"
+  },
+  "devDependencies": {
+    "electron": "^41.0.3",
+    "electron-builder": "^26.8.1",
+    "nodemon": "^3.0.2"
+  },
+  "build": {
+    "appId": "com.devportmanager.app",
+    "productName": "Dev Port Manager",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "desktop/**/*",
+      "lib/**/*",
+      "bin/**/*",
+      "views/**/*",
+      "public/**/*",
+      "server.js",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "desktop/main.js"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "your-org",
+      "repo": "dev-port-manager",
+      "releaseType": "release"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "msi",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "asInvoker",
+      "signAndEditExecutable": true
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Dev Port Manager",
+      "runAfterFinish": true,
+      "installerHeaderIcon": "build/installer-icon.ico",
+      "installerIcon": "build/installer-icon.ico",
+      "uninstallerIcon": "build/uninstaller-icon.ico"
+    },
+    "msi": {
+      "oneClick": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "portable": {
+      "artifactName": "${productName}-portable-${version}-${os}-${arch}.${ext}"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "${productName} ${version}",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "category": "Development",
+      "synopsis": "Manage development ports for 100+ projects",
+      "description": "Cross-platform desktop app for managing local development projects",
+      "maintainer": "Dev Port Manager Team"
+    },
+    "appImage": {
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
+    }
+  }
+}

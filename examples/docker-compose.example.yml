@@ -1,0 +1,187 @@
+version: '3.9'
+
+# Example Docker Compose configuration showing multiple services
+# Each service assigned a port via Dev Port Manager
+
+services:
+  # API Gateway - Main entry point
+  api-gateway:
+    image: nginx:latest
+    container_name: api-gateway
+    ports:
+      - "9100:80"
+    environment:
+      - SERVICE_NAME=api-gateway
+      - SERVICE_PORT=9100
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+  # Authentication Service
+  auth-service:
+    image: node:18-alpine
+    container_name: auth-service
+    working_dir: /app
+    volumes:
+      - ./auth-service:/app
+    ports:
+      - "9101:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - SERVICE_NAME=auth-service
+      - SERVICE_PORT=9101
+    env_file:
+      - auth-service/.env
+    networks:
+      - dev-network
+    restart: unless-stopped
+    command: npm start
+
+  # User Service
+  user-service:
+    image: node:18-alpine
+    container_name: user-service
+    working_dir: /app
+    volumes:
+      - ./user-service:/app
+    ports:
+      - "9102:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - SERVICE_NAME=user-service
+      - SERVICE_PORT=9102
+    env_file:
+      - user-service/.env
+    networks:
+      - dev-network
+    restart: unless-stopped
+    command: npm start
+    depends_on:
+      - postgres
+
+  # Notification Service
+  notification-service:
+    image: node:18-alpine
+    container_name: notification-service
+    working_dir: /app
+    volumes:
+      - ./notification-service:/app
+    ports:
+      - "9103:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - SERVICE_NAME=notification-service
+      - SERVICE_PORT=9103
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    env_file:
+      - notification-service/.env
+    networks:
+      - dev-network
+    restart: unless-stopped
+    command: npm start
+    depends_on:
+      - redis
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: postgres-dev
+    environment:
+      - POSTGRES_DB=devdb
+      - POSTGRES_USER=dev
+      - POSTGRES_PASSWORD=dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+  # pgAdmin - PostgreSQL Management UI
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin-dev
+    ports:
+      - "9200:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@dev.local
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis-dev
+    ports:
+      - "6379:6379"
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+  # Redis Commander - Redis Management UI
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "9300:8081"
+    networks:
+      - dev-network
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  # Mailhog - Email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "9399:8025"   # Web UI
+    networks:
+      - dev-network
+    restart: unless-stopped
+
+networks:
+  dev-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+
+# How to use this file:
+#
+# 1. Generate project configs for each service:
+#    dpm assign api-gateway --docker
+#    dpm assign auth-service --docker
+#    dpm assign user-service --docker
+#    dpm assign notification-service --docker
+#
+# 2. Start the stack:
+#    docker-compose up -d
+#
+# 3. View logs:
+#    docker-compose logs -f
+#
+# 4. Access services:
+#    - API Gateway: http://localhost:9100
+#    - Auth Service: http://localhost:9101
+#    - User Service: http://localhost:9102
+#    - Notification: http://localhost:9103
+#    - pgAdmin: http://localhost:9200
+#    - Redis UI: http://localhost:9300
+#    - Mailhog: http://localhost:9399
+#
+# 5. Stop the stack:
+#    docker-compose down
+#
+# 6. Stop and remove volumes:
+#    docker-compose down -v

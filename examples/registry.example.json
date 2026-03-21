@@ -1,0 +1,61 @@
+{
+  "_metadata": {
+    "created": "2024-03-21T00:00:00.000Z",
+    "version": "1.0.0",
+    "description": "Dev Port Manager Registry - Central registry for all local project ports",
+    "totalProjects": 8,
+    "portRangeStart": 9000,
+    "portRangeEnd": 9999
+  },
+  "_reserved": {
+    "description": "Reserved port ranges for organization",
+    "9000-9099": "Core infrastructure (Jenkins, Jira, Artifactory, etc)",
+    "9100-9499": "Project dev services (APIs, microservices, etc)",
+    "9500-9999": "Experimental & Docker services"
+  },
+  "_guidelines": {
+    "addNewProject": "Use 'dpm assign <project-name>' to auto-assign next available port",
+    "removeProject": "Use 'dpm remove <project-name>'",
+    "syncHosts": "Use 'dpm sync' to update /etc/hosts after adding projects"
+  },
+  "jenkins-local": {
+    "port": 9001,
+    "host": "jenkins-local.localtest.me",
+    "addedAt": "2024-03-21T08:00:00.000Z"
+  },
+  "jira-docker": {
+    "port": 9004,
+    "host": "jira-docker.localtest.me",
+    "addedAt": "2024-03-21T08:15:00.000Z"
+  },
+  "api-gateway": {
+    "port": 9100,
+    "host": "api-gateway.localtest.me",
+    "addedAt": "2024-03-21T08:30:00.000Z"
+  },
+  "auth-service": {
+    "port": 9101,
+    "host": "auth-service.localtest.me",
+    "addedAt": "2024-03-21T08:45:00.000Z"
+  },
+  "user-service": {
+    "port": 9102,
+    "host": "user-service.localtest.me",
+    "addedAt": "2024-03-21T09:00:00.000Z"
+  },
+  "notification-service": {
+    "port": 9103,
+    "host": "notification-service.localtest.me",
+    "addedAt": "2024-03-21T09:15:00.000Z"
+  },
+  "postgres-ui": {
+    "port": 9200,
+    "host": "postgres-ui.localtest.me",
+    "addedAt": "2024-03-21T09:30:00.000Z"
+  },
+  "redis-commander": {
+    "port": 9300,
+    "host": "redis-commander.localtest.me",
+    "addedAt": "2024-03-21T09:45:00.000Z"
+  }
+}

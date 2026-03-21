@@ -1,0 +1,17 @@
+{
+  "registryPath": "C:\\Users\\sshaikh\\.dev-ports\\registry.json",
+  "portRange": [
+    9000,
+    9999
+  ],
+  "useLocaltestMe": true,
+  "baseScanDirs": [],
+  "dockerEnvPath": "./.env",
+  "dockerComposeTemplate": "templates/docker-compose.yml",
+  "theme": "light",
+  "language": "en",
+  "autoBackup": true,
+  "backupCount": 5,
+  "checkPortAvailability": true,
+  "generateVSCodeSettings": true
+}

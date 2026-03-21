@@ -1,0 +1,15 @@
+{
+  "name": "example-project",
+  "host": "example-project.localtest.me",
+  "port": 9100,
+  "url": "http://example-project.localtest.me:9100",
+  "protocol": "http",
+  "timestamp": "2024-03-21T10:30:00.000Z",
+  "environment": {
+    "PROJ_NAME": "example-project",
+    "PROJ_HOST": "example-project.localtest.me",
+    "PROJ_PORT": 9100,
+    "PROJ_URL": "http://example-project.localtest.me:9100",
+    "LOCALHOST_PORT": 9100
+  }
+}

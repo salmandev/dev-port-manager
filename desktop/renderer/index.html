@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>Dev Port Manager</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <h1>🚀 Dev Port Manager <span class="app-badge">Desktop</span></h1>
+        <p class="subtitle">Manage your development projects and ports</p>
+      </div>
+      <div class="header-info">
+        <span class="badge" id="platform-badge">-</span>
+        <span class="badge badge-info" id="registry-info">-</span>
+      </div>
+    </header>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-total">-</div>
+        <div class="stat-label">Total Projects</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">9000-9999</div>
+        <div class="stat-label">Port Range</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-available">-</div>
+        <div class="stat-label">Available Ports</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-types">-</div>
+        <div class="stat-label">Project Types</div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions-bar">
+      <button class="btn btn-primary" id="btn-assign">➕ Assign Project</button>
+      <button class="btn btn-secondary" id="btn-scan">🔍 Scan Directory</button>
+      <button class="btn btn-secondary" id="btn-sync">🔄 Sync Hosts</button>
+      <button class="btn btn-secondary" id="btn-backup">💾 Backup</button>
+      <button class="btn btn-secondary" id="btn-refresh">🔄 Refresh</button>
+      <button class="btn btn-warning" id="btn-sync-ports">🔍 Sync Actual Ports</button>
+      <button class="btn btn-secondary" id="btn-settings">⚙️ Settings</button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="projects">📋 Projects</button>
+      <button class="tab-btn" data-tab="tools">🛠️ Tools</button>
+      <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
+    </div>
+
+    <!-- Search/Filter -->
+    <div class="search-bar" id="projects-tab">
+      <input type="text" id="search-input" placeholder="Search projects...">
+      <select id="filter-type">
+        <option value="">All Types</option>
+        <option value="node">Node.js</option>
+        <option value="maven">Maven</option>
+        <option value="gradle">Gradle</option>
+        <option value="python">Python</option>
+        <option value="ruby">Ruby</option>
+        <option value="rust">Rust</option>
+        <option value="go">Go</option>
+        <option value="php">PHP</option>
+        <option value="marked">Marked</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="table-container">
+      <table class="projects-table" id="projects-table">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Type</th>
+            <th>Host</th>
+            <th>Port</th>
+            <th>URLs</th>
+            <th>OS</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="projects-body">
+          <tr>
+            <td colspan="8" class="empty-state">
+              <p>Loading projects...</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Settings Tab Content -->
+    <div id="settings-tab" class="tab-content" style="display: none;">
+      <div class="settings-container">
+        <h2>⚙️ Settings</h2>
+        
+        <div class="settings-section">
+          <h3>📁 Registry Configuration</h3>
+          <div class="form-group">
+            <label for="setting-registry-path">Registry Path</label>
+            <input type="text" id="setting-registry-path" placeholder="~/.dev-ports/registry.json">
+            <button class="btn btn-sm" id="btn-browse-registry">📁 Browse</button>
+          </div>
+          <button class="btn btn-primary" id="btn-save-registry">Save Registry Path</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>🔢 Port Range</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="setting-port-min">Min Port</label>
+              <input type="number" id="setting-port-min" value="9000" min="1024" max="65535">
+            </div>
+            <div class="form-group">
+              <label for="setting-port-max">Max Port</label>
+              <input type="number" id="setting-port-max" value="9999" min="1024" max="65535">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="btn-save-port-range">Save Port Range</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>🌐 Network</h3>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="setting-use-localtest">
+              Use *.localtest.me (recommended)
+            </label>
+            <p class="hint">No hosts file editing required</p>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>💾 Backup</h3>
+          <button class="btn btn-secondary" id="btn-create-backup">Create Backup Now</button>
+          <button class="btn btn-secondary" id="btn-restore-backup">Restore from Backup</button>
+          <div id="backup-list" class="backup-list"></div>
+        </div>
+
+        <div class="settings-section">
+          <h3>ℹ️ System Info</h3>
+          <div id="system-info" class="system-info"></div>
+        </div>
+
+        <div class="settings-section">
+          <h3>⚠️ Danger Zone</h3>
+          <button class="btn btn-danger" id="btn-reset-settings">Reset to Defaults</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tools Tab Content -->
+    <div id="tools-tab" class="tab-content" style="display: none;">
+      <div class="tools-container">
+        <h2>🛠️ Developer Tools</h2>
+        
+        <!-- Project Selection -->
+        <div class="tools-section">
+          <h3>📁 Select Project</h3>
+          <div class="form-group">
+            <select id="tools-project-select">
+              <option value="">-- Select a project --</option>
+            </select>
+          </div>
+          <div id="project-info" class="project-info" style="display: none;">
+            <p><strong>Path:</strong> <span id="project-path"></span></p>
+            <p><strong>Port:</strong> <span id="project-port"></span></p>
+            <p><strong>Type:</strong> <span id="project-type"></span></p>
+          </div>
+        </div>
+
+        <!-- Config Files -->
+        <div class="tools-section">
+          <h3>📄 Config Files</h3>
+          <button class="btn btn-secondary" id="btn-load-configs">🔍 Load Config Files</button>
+          <div id="config-files-list" class="config-list" style="margin-top: 16px;"></div>
+        </div>
+
+        <!-- NPM Scripts -->
+        <div class="tools-section">
+          <h3>📜 NPM Scripts</h3>
+          <button class="btn btn-secondary" id="btn-load-scripts">🔍 Load Scripts</button>
+          <div id="npm-scripts-list" class="script-list" style="margin-top: 16px;"></div>
+        </div>
+
+        <!-- Terminal Output -->
+        <div class="tools-section">
+          <h3>💻 Terminal Output</h3>
+          <div id="terminal-output" class="terminal-output">
+            <div class="info">Ready. Select a project and load configs or scripts.</div>
+          </div>
+          <div style="margin-top: 12px;">
+            <button class="btn btn-secondary" id="btn-clear-terminal">🗑️ Clear</button>
+            <button class="btn btn-danger" id="btn-kill-process">⛔ Kill Process</button>
+          </div>
+        </div>
+
+        <!-- Running Processes -->
+        <div class="tools-section">
+          <h3>🔄 Running Processes</h3>
+          <button class="btn btn-secondary" id="btn-refresh-processes">🔄 Refresh</button>
+          <div id="running-processes-list" class="process-list" style="margin-top: 16px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Message Toast -->
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <!-- Assign Modal -->
+  <div id="assign-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>➕ Assign Project</h2>
+        <button class="close-btn" onclick="hideModal('assign-modal')">&times;</button>
+      </div>
+      <form id="assign-form">
+        <div class="form-group">
+          <label for="project-name">Project Name *</label>
+          <input type="text" id="project-name" name="name" required placeholder="my-project">
+        </div>
+        <div class="form-group">
+          <label for="project-port">Port (optional)</label>
+          <input type="number" id="project-port" name="port" placeholder="9000" min="9000" max="9999">
+        </div>
+        <div class="form-group">
+          <label for="project-host">Host (optional)</label>
+          <input type="text" id="project-host" name="host" placeholder="my-project.localtest.me">
+        </div>
+        <div class="form-group">
+          <label for="project-path">Base Path (optional)</label>
+          <input type="text" id="project-path" name="basePath" placeholder="Select directory...">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-browse">📁 Browse</button>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('assign-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Assign</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scan Modal -->
+  <div id="scan-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🔍 Scan Directory</h2>
+        <button class="close-btn" onclick="hideModal('scan-modal')">&times;</button>
+      </div>
+      <form id="scan-form">
+        <div class="form-group">
+          <label for="scan-path">Directory Path *</label>
+          <input type="text" id="scan-path" name="baseDir" required placeholder="Select directory...">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-browse-scan">📁 Browse</button>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="scan-dry-run" name="dryRun">
+            Dry Run (preview only)
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('scan-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Scan</button>
+        </div>
+      </form>
+      <div id="scan-results" class="scan-results"></div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

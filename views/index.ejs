@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dev Port Manager Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <h1>🚀 Dev Port Manager</h1>
+        <p class="subtitle">Manage your development projects and ports</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-secondary" onclick="location.reload()" title="Refresh now">🔄 Refresh</button>
+        <a href="/status" class="btn btn-secondary" title="Live status page">📊 Live Status</a>
+        <span class="auto-refresh-indicator" title="Auto-refreshes every 30 seconds">🔄 Auto-refresh: ON</span>
+      </div>
+      <div class="header-info">
+        <span class="badge badge-<%= system.platform %>"><%= system.platform %></span>
+        <span class="badge badge-info">Registry: <%= system.registryFile %></span>
+      </div>
+    </header>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value"><%= projects.length %></div>
+        <div class="stat-label">Total Projects</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="port-range">9000-9999</div>
+        <div class="stat-label">Port Range</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="available-ports">-</div>
+        <div class="stat-label">Available Ports</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="project-types">-</div>
+        <div class="stat-label">Project Types</div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions-bar">
+      <button class="btn btn-primary" onclick="showModal('assign-modal')">
+        ➕ Assign Project
+      </button>
+      <button class="btn btn-secondary" onclick="showModal('scan-modal')">
+        🔍 Scan Directory
+      </button>
+      <button class="btn btn-secondary" onclick="syncHosts()">
+        🔄 Sync Hosts
+      </button>
+      <button class="btn btn-secondary" onclick="createBackup()">
+        💾 Backup
+      </button>
+      <button class="btn btn-secondary" onclick="refreshProjects()">
+        🔄 Refresh
+      </button>
+    </div>
+
+    <!-- Search/Filter -->
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search projects..." onkeyup="filterProjects()">
+      <select id="filter-type" onchange="filterProjects()">
+        <option value="">All Types</option>
+        <option value="node">Node.js</option>
+        <option value="maven">Maven</option>
+        <option value="gradle">Gradle</option>
+        <option value="python">Python</option>
+        <option value="ruby">Ruby</option>
+        <option value="rust">Rust</option>
+        <option value="go">Go</option>
+        <option value="php">PHP</option>
+        <option value="marked">Marked</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="table-container">
+      <table class="projects-table" id="projects-table">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Type</th>
+            <th>Host</th>
+            <th>Port</th>
+            <th>URLs</th>
+            <th>OS</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="projects-body">
+          <% if (projects.length === 0) { %>
+            <tr>
+              <td colspan="7" class="empty-state">
+                <p>📭 No projects registered yet</p>
+                <p class="hint">Use "Assign Project" or "Scan Directory" to get started</p>
+              </td>
+            </tr>
+          <% } else { %>
+            <% projects.forEach(function(project) { %>
+              <tr data-name="<%= project.name %>">
+                <td>
+                  <span class="project-name"><%= project.name %></span>
+                </td>
+                <td>
+                  <span class="type-badge type-<%= project.projectType || 'other' %>">
+                    <%= project.projectType || 'unknown' %>
+                  </span>
+                </td>
+                <td><%= project.host %></td>
+                <td><span class="port-badge"><%= project.port %></span></td>
+                <td>
+                  <div class="url-list">
+                    <a href="<%= project.url %>" target="_blank" class="url-link">
+                      🔗 <%= project.host.replace('.localtest.me', '') %>
+                    </a>
+                    <% if (project.localhostUrl) { %>
+                      <a href="<%= project.localhostUrl %>" target="_blank" class="url-link localhost">
+                        🏠 localhost:<%= project.port %>
+                      </a>
+                    <% } else { %>
+                      <a href="http://localhost:<%= project.port %>" target="_blank" class="url-link localhost">
+                        🏠 localhost:<%= project.port %>
+                      </a>
+                    <% } %>
+                  </div>
+                </td>
+                <td><span class="os-badge os-<%= project.os %>"><%= project.os %></span></td>
+                <td><span class="status-badge" data-port="<%= project.port %>">Checking...</span></td>
+                <td class="actions">
+                  <button class="btn-icon" onclick="editProjectPort('<%= project.name %>', <%= project.port %>, '<%= project.basePath || '' %>')" title="Edit Port">✏️</button>
+                  <button class="btn-icon" onclick="copyUrl('<%= project.url %>')" title="Copy URL">
+                    📋
+                  </button>
+                  <button class="btn-icon" onclick="checkPort(<%= project.port %>)" title="Check Port">
+                    🔍
+                  </button>
+                  <button class="btn-icon btn-danger" onclick="removeProject('<%= project.name %>')" title="Remove">
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            <% }); %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Message Toast -->
+    <div id="toast" class="toast"></div>
+  </div>
+
+  <!-- Assign Modal -->
+  <div id="assign-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>➕ Assign Project</h2>
+        <button class="close-btn" onclick="hideModal('assign-modal')">&times;</button>
+      </div>
+      <form onsubmit="assignProject(event)">
+        <div class="form-group">
+          <label for="project-name">Project Name *</label>
+          <input type="text" id="project-name" name="name" required placeholder="my-project">
+        </div>
+        <div class="form-group">
+          <label for="project-port">Port (optional)</label>
+          <input type="number" id="project-port" name="port" placeholder="9000" min="9000" max="9999">
+        </div>
+        <div class="form-group">
+          <label for="project-host">Host (optional)</label>
+          <input type="text" id="project-host" name="host" placeholder="my-project.localtest.me">
+        </div>
+        <div class="form-group">
+          <label for="project-path">Base Path (optional)</label>
+          <input type="text" id="project-path" name="basePath" placeholder="C:\path\to\project">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('assign-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Assign</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scan Modal -->
+  <div id="scan-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>🔍 Scan Directory</h2>
+        <button class="close-btn" onclick="hideModal('scan-modal')">&times;</button>
+      </div>
+      <form onsubmit="scanDirectory(event)">
+        <div class="form-group">
+          <label for="scan-path">Directory Path *</label>
+          <input type="text" id="scan-path" name="baseDir" required placeholder="C:\Users\YourName\Projects">
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="scan-dry-run" name="dryRun">
+            Dry Run (preview only)
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="hideModal('scan-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Scan</button>
+        </div>
+      </form>
+      <div id="scan-results" class="scan-results"></div>
+    </div>
+  </div>
+
+  <script>
+    // Edit project port with suggestions
+    async function editProjectPort(name, currentPort, basePath) {
+      try {
+        // Get project type from the page
+        const row = document.querySelector(`tr[data-name="${name}"]`);
+        const typeBadge = row.querySelector('.type-badge');
+        const projectType = typeBadge ? typeBadge.textContent.trim() : 'node';
+        
+        // Fetch port suggestions
+        const suggestRes = await fetch(`/api/suggest-port?projectType=${projectType}&preferredPort=${currentPort}`);
+        const suggestData = await suggestRes.json();
+        
+        if (!suggestData.success) {
+          alert('Failed to get port suggestions: ' + suggestData.error);
+          return;
+        }
+        
+        // Build suggestion message
+        let message = `Edit port for ${name}:\n\n`;
+        message += `Current port: ${currentPort}\n\n`;
+        message += `Suggested port: ${suggestData.port}\n`;
+        message += `Reason: ${suggestData.reason}\n`;
+        
+        if (suggestData.alternatives && suggestData.alternatives.length > 0) {
+          message += `\nAlternatives: ${suggestData.alternatives.join(', ')}\n`;
+        }
+        
+        message += `\nEnter new port (or leave as ${suggestData.port}):`;
+        
+        // Prompt for new port
+        const newPort = prompt(message, suggestData.port);
+        if (!newPort || newPort === currentPort.toString()) return;
+        
+        const portNum = parseInt(newPort, 10);
+        if (isNaN(portNum) || portNum < 1024 || portNum > 65535) {
+          alert('Invalid port number. Must be between 1024 and 65535.');
+          return;
+        }
+        
+        // Ask if should update config files
+        const updateConfig = basePath && confirm(`Update config files in ${basePath} to use port ${portNum}?\n\nThis will update:\n- .env (PORT variable)\n- vite.config.js/ts (if exists)\n- package.json (if has port field)\n\nClick OK to update configs, Cancel to only update registry.`);
+        
+        // Update port
+        const updateRes = await fetch('/api/update-port', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            port: portNum,
+            basePath: basePath || null,
+            updateConfig
+          })
+        });
+        
+        const updateData = await updateRes.json();
+        
+        if (updateData.success) {
+          alert(`✅ Port updated to ${portNum}!\n\n${updateConfig ? 'Config files updated!' : 'Registry updated (config files unchanged)'}`);
+          location.reload();
+        } else {
+          alert('❌ Failed to update port: ' + updateData.error);
+        }
+      } catch (err) {
+        alert('❌ Error: ' + err.message);
+      }
+    }
+
+    // Copy URL to clipboard
+    function copyUrl(url) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('✅ URL copied to clipboard:\n' + url);
+      }).catch(() => {
+        alert('❌ Failed to copy URL');
+      });
+    }
+
+    // Check if port is available
+    async function checkPort(port) {
+      try {
+        const res = await fetch(`/api/port/${port}`);
+        const data = await res.json();
+        
+        if (data.success) {
+          if (data.available) {
+            alert(`✅ Port ${port} is available (free)`);
+          } else {
+            alert(`🔴 Port ${port} is in use`);
+          }
+        } else {
+          alert('❌ Failed to check port: ' + data.error);
+        }
+      } catch (err) {
+        alert('❌ Error: ' + err.message);
+      }
+    }
+
+    // Remove project
+    async function removeProject(name) {
+      if (!confirm(`Remove "${name}" from registry?\n\nThis will NOT delete any files, just remove from dev-port-manager.`)) return;
+      
+      try {
+        const res = await fetch(`/api/projects/${name}`, { method: 'DELETE' });
+        const data = await res.json();
+        
+        if (data.success) {
+          alert(`✅ Project "${name}" removed`);
+          location.reload();
+        } else {
+          alert('❌ Failed to remove: ' + data.error);
+        }
+      } catch (err) {
+        alert('❌ Error: ' + err.message);
+      }
+    }
+
+    // Auto-check port statuses on page load and every 30 seconds
+    async function checkPortStatuses() {
+      try {
+        const res = await fetch('/api/ports/status');
+        const data = await res.json();
+        
+        if (data.success) {
+          data.status.forEach(status => {
+            const badge = document.querySelector(`.status-badge[data-port="${status.port}"]`);
+            if (badge) {
+              if (status.available) {
+                badge.textContent = '✅ Free';
+                badge.className = 'status-badge status-free';
+              } else {
+                badge.textContent = '🔴 In Use';
+                badge.className = 'status-badge status-used';
+              }
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Failed to check port statuses:', err);
+      }
+    }
+    
+    // Initial check
+    checkPortStatuses();
+    
+    // Auto-refresh every 30 seconds
+    setInterval(checkPortStatuses, 30000);
+  </script>
+</body>
+</html>
