@@ -293,10 +293,52 @@ function showToast(message, type = 'success') {
 }
 
 // ============================================================================
+// THEME TOGGLE
+// ============================================================================
+
+/**
+ * Toggle between light and dark theme
+ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const currentTheme = html.getAttribute('data-theme');
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  
+  // Set theme
+  html.setAttribute('data-theme', newTheme);
+  
+  // Save to localStorage
+  localStorage.setItem('dpm-theme', newTheme);
+  
+  // Show toast notification
+  const icon = newTheme === 'light' ? '☀️' : '🌙';
+  const themeName = newTheme === 'light' ? 'Light' : 'Dark';
+  showToast(`${icon} ${themeName} mode enabled`, 'success');
+}
+
+/**
+ * Load saved theme preference
+ */
+function loadThemePreference() {
+  const html = document.documentElement;
+  const savedTheme = localStorage.getItem('dpm-theme');
+  
+  if (savedTheme) {
+    html.setAttribute('data-theme', savedTheme);
+  } else {
+    // Default to dark theme
+    html.setAttribute('data-theme', 'dark');
+  }
+}
+
+// ============================================================================
 // INITIALIZATION
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Load theme preference
+  loadThemePreference();
+  
   // Initial stats update
   fetch('/api/projects')
     .then(r => r.json())

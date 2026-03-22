@@ -15,6 +15,14 @@
         <p class="subtitle">Manage your development projects and ports</p>
       </div>
       <div class="header-actions">
+        <!-- Theme Toggle -->
+        <div class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark theme">
+          <span class="theme-toggle-icon sun">☀️</span>
+          <span class="theme-toggle-icon moon">🌙</span>
+          <div class="theme-toggle-slider"></div>
+          <span class="theme-toggle-label">Light</span>
+        </div>
+        
         <button class="btn btn-secondary" onclick="location.reload()" title="Refresh now">🔄 Refresh</button>
         <a href="/status" class="btn btn-secondary" title="Live status page">📊 Live Status</a>
         <span class="auto-refresh-indicator" title="Auto-refreshes every 30 seconds">🔄 Auto-refresh: ON</span>

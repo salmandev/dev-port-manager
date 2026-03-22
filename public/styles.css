@@ -1,6 +1,7 @@
 /**
  * Dev Port Manager Dashboard Styles
- * Modern theme inspired by Vercel, Linear, and Stripe
+ * Modern theme with Light/Dark mode support
+ * Inspired by Vercel, Linear, and Stripe
  * Features: Gradients, glassmorphism, smooth animations
  */
 
@@ -21,7 +22,7 @@
   --danger: #ef4444;
   --info: #3b82f6;
   
-  /* Dark theme */
+  /* Dark theme (default) */
   --bg-dark: #0f0f23;
   --bg-card: #1a1a2e;
   --bg-card-hover: #252542;
@@ -43,6 +44,42 @@
   --glass-bg: rgba(26, 26, 46, 0.7);
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================================
+   LIGHT THEME
+   ============================================================================ */
+
+[data-theme="light"] {
+  /* Light theme colors */
+  --bg-dark: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: rgba(0, 0, 0, 0.1);
+  --border-light: rgba(0, 0, 0, 0.15);
+  
+  /* Effects */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 30px rgba(102, 126, 234, 0.2);
+  --glow-primary: 0 0 20px rgba(102, 126, 234, 0.3);
+  --glow-success: 0 0 20px rgba(16, 185, 129, 0.2);
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] body::before {
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(240, 147, 251, 0.05) 0%, transparent 40%);
 }
 
 * {
@@ -136,6 +173,91 @@ body::before {
   display: flex;
   gap: 12px;
   align-items: center;
+}
+
+/* ============================================================================
+   THEME TOGGLE
+   ============================================================================ */
+
+.theme-toggle {
+  position: relative;
+  width: 60px;
+  height: 32px;
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  backdrop-filter: blur(10px);
+}
+
+.theme-toggle:hover {
+  border-color: var(--border-light);
+  transform: scale(1.05);
+}
+
+.theme-toggle-slider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  border-radius: 50%;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="light"] .theme-toggle-slider {
+  transform: translateX(28px);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.theme-toggle-icon {
+  position: absolute;
+  font-size: 14px;
+  transition: opacity 0.3s ease;
+}
+
+.theme-toggle-icon.sun {
+  left: 8px;
+  opacity: 0;
+}
+
+.theme-toggle-icon.moon {
+  right: 8px;
+  opacity: 1;
+}
+
+[data-theme="light"] .theme-toggle-icon.sun {
+  opacity: 1;
+}
+
+[data-theme="light"] .theme-toggle-icon.moon {
+  opacity: 0;
+}
+
+.theme-toggle-label {
+  position: absolute;
+  left: 36px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: opacity 0.3s ease;
+  opacity: 0;
+}
+
+[data-theme="light"] .theme-toggle-label {
+  opacity: 1;
+  left: 8px;
 }
 
 .auto-refresh-indicator {
