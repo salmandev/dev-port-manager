@@ -1168,7 +1168,7 @@ program
     try {
       const targetPath = projectPath ? path.resolve(projectPath) : process.cwd();
       const scripts = await npmExecutor.detectNpmScripts(targetPath);
-      
+
       console.log(chalk.green('\n📜 Available NPM Scripts:\n'));
       if (scripts.length === 0) {
         console.log(chalk.yellow('   No scripts found (no package.json)\n'));
@@ -1178,6 +1178,187 @@ program
           console.log(`   ${chalk.cyan(s.name.padEnd(15))} ${badge}${chalk.dim(s.command)}`);
         });
         console.log();
+      }
+    } catch (err) {
+      console.error(chalk.red(`❌ Error: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+/**
+ * Start a project (npm start or npm run dev)
+ */
+program
+  .command('start [project]')
+  .description('Start a project (auto-detects start/dev script)')
+  .option('-p, --port <port>', 'Port to check for existing process')
+  .action(async (project, options) => {
+    try {
+      const { getProject, getAllProjects } = require('../lib/project');
+      
+      let targetPath;
+      let projectName;
+
+      // Find project
+      if (project) {
+        const proj = getProject(project);
+        if (!proj) {
+          throw new Error(`Project '${project}' not found in registry`);
+        }
+        targetPath = proj.basePath;
+        projectName = proj.name;
+      } else {
+        targetPath = process.cwd();
+        // Try to find project in current directory
+        const allProjects = getAllProjects();
+        const currentProj = allProjects.find(p => p.basePath === targetPath);
+        projectName = currentProj ? currentProj.name : path.basename(targetPath);
+      }
+
+      // Check if something is already running on the port
+      if (!options.port) {
+        const proj = getProject(project) || getAllProjects().find(p => p.basePath === targetPath);
+        if (proj && proj.port) {
+          options.port = proj.port;
+        }
+      }
+
+      if (options.port) {
+        const port = parseInt(options.port, 10);
+        const inUse = await portScanner.isPortInUse(port);
+        if (inUse) {
+          const pid = await portScanner.getProcessOnPort(port);
+          const processName = await portScanner.getProcessName(pid);
+          console.log(chalk.yellow(`⚠️  Port ${port} is already in use`));
+          console.log(chalk.dim(`   Process: ${processName || 'unknown'} (PID: ${pid})`));
+          console.log(chalk.dim(`   Stop it first: dev-port stop ${projectName || ''}\n`));
+          process.exit(1);
+        }
+      }
+
+      // Detect available scripts
+      const scripts = await npmExecutor.detectNpmScripts(targetPath);
+      const hasDev = scripts.some(s => s.name === 'dev');
+      const hasStart = scripts.some(s => s.name === 'start');
+
+      // Choose command: prefer 'dev' for development, fallback to 'start'
+      const command = hasDev ? 'run dev' : (hasStart ? 'start' : 'run serve');
+
+      console.log(chalk.green(`\n🚀 Starting ${projectName || 'project'}...`));
+      console.log(chalk.dim(`   Command: npm ${command}`));
+      console.log(chalk.dim(`   Directory: ${targetPath}\n`));
+
+      const result = await npmExecutor.runNpmCommand(targetPath, `npm ${command}`);
+
+      if (result.success) {
+        console.log(chalk.green('\n✅ Project started successfully\n'));
+      } else {
+        console.log(chalk.yellow(`\n⚠️  Project exited with code ${result.exitCode}\n`));
+      }
+    } catch (err) {
+      console.error(chalk.red(`❌ Error: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+/**
+ * Stop a project (kill process on port)
+ */
+program
+  .command('stop [project]')
+  .description('Stop a running project (kill process on port)')
+  .alias('kill')
+  .action(async (project) => {
+    try {
+      const { getProject, getAllProjects } = require('../lib/project');
+      
+      let targetPort;
+      let projectName;
+
+      // Find project
+      if (project) {
+        const proj = getProject(project);
+        if (!proj) {
+          throw new Error(`Project '${project}' not found in registry`);
+        }
+        targetPort = proj.port;
+        projectName = proj.name;
+      } else {
+        // Use current directory project
+        const allProjects = getAllProjects();
+        const currentProj = allProjects.find(p => p.basePath === process.cwd());
+        if (!currentProj) {
+          throw new Error('No project found in current directory. Provide project name or run from project folder.');
+        }
+        targetPort = currentProj.port;
+        projectName = currentProj.name;
+      }
+
+      console.log(chalk.cyan(`\n🔍 Checking port ${targetPort}...`));
+
+      // Check if port is in use
+      const inUse = await portScanner.isPortInUse(targetPort);
+      if (!inUse) {
+        console.log(chalk.yellow(`⚠️  Nothing is running on port ${targetPort}\n`));
+        process.exit(0);
+      }
+
+      // Get process info
+      const pid = await portScanner.getProcessOnPort(targetPort);
+      const processName = await portScanner.getProcessName(pid);
+
+      console.log(chalk.yellow(`🛑 Stopping ${projectName}...`));
+      console.log(chalk.dim(`   Process: ${processName || 'unknown'}`));
+      console.log(chalk.dim(`   PID: ${pid}`));
+      console.log(chalk.dim(`   Port: ${targetPort}\n`));
+
+      // Kill the process
+      const killResult = await npmExecutor.killProcess(pid);
+
+      if (killResult.success) {
+        console.log(chalk.green(`✅ ${projectName} stopped successfully\n`));
+      } else {
+        console.log(chalk.red(`❌ Failed to stop process: ${killResult.error || 'unknown error'}`));
+        console.log(chalk.dim(`   Try manually: ${process.platform === 'win32' ? `taskkill /F /PID ${pid}` : `kill -9 ${pid}`}\n`));
+        process.exit(1);
+      }
+    } catch (err) {
+      console.error(chalk.red(`❌ Error: ${err.message}`));
+      process.exit(1);
+    }
+  });
+
+/**
+ * List running processes
+ */
+program
+  .command('ps')
+  .description('List all running processes managed by dev-port')
+  .alias('processes')
+  .action(async () => {
+    try {
+      const { getAllProjects } = require('../lib/project');
+      
+      console.log(chalk.green('\n📊 Running Processes:\n'));
+
+      const projects = getAllProjects();
+      let runningCount = 0;
+
+      for (const proj of projects) {
+        const inUse = await portScanner.isPortInUse(proj.port);
+        if (inUse) {
+          runningCount++;
+          const pid = await portScanner.getProcessOnPort(proj.port);
+          const processName = await portScanner.getProcessName(pid);
+          
+          console.log(`   ${chalk.green('●')} ${chalk.cyan(proj.name.padEnd(25))} ${chalk.dim(`:${proj.port}`)} ${chalk.yellow(`(${processName || 'unknown'})`)}`);
+        }
+      }
+
+      if (runningCount === 0) {
+        console.log(chalk.yellow('   No processes running\n'));
+      } else {
+        console.log(chalk.dim(`\n   Total: ${runningCount} process(es) running\n`));
       }
     } catch (err) {
       console.error(chalk.red(`❌ Error: ${err.message}`));
